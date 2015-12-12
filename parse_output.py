@@ -9,6 +9,6 @@ output.pop()
 output = map(str.split, output)
 
 output = pd.DataFrame(data=output)
-output.set_index(0, axis=1)
+output.set_index(0, inplace=True)
 
 

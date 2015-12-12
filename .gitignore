@@ -3,3 +3,4 @@ normalize
 reconstruct
 concatenate
 line
+vec.emb
