@@ -44,6 +44,8 @@ Neighbor *rank_list;
 std::map<int, double> vid2weight;
 
 /* Build a hash table, mapping each vertex name to a unique vertex id */
+/* Wtf dude, C++ has standard libraries...
+ */
 unsigned int Hash(char *key)
 {
 	unsigned int seed = 131;
