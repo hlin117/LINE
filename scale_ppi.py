@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # coding: utf-8
 
@@ -26,33 +27,33 @@ expressions = expressions.T
 
 # In[173]:
 
-get_ipython().magic(u'matplotlib inline')
-import matplotlib.pyplot as plt
-import numpy as np
-
-
-# ## Mucking around data...
-
-# In[41]:
-
-lessthan_mask = expressions < -3
-morethan_mask = expressions > 3
-
-
-# In[42]:
-
-plt.hist((lessthan_mask | morethan_mask).sum(axis=1), bins=5)
-
-
-# In[8]:
-
-np.percentile(expressions.ix[:, 0], 33)
+#get_ipython().magic(u'matplotlib inline')
+#import matplotlib.pyplot as plt
+#import numpy as np
+#
+#
+## ## Mucking around data...
+#
+## In[41]:
+#
+#lessthan_mask = expressions < -3
+#morethan_mask = expressions > 3
+#
+#
+## In[42]:
+#
+#plt.hist((lessthan_mask | morethan_mask).sum(axis=1), bins=5)
+#
+#
+## In[8]:
+#
+#np.percentile(expressions.ix[:, 0], 33)
 
 
 # ## Going to use the CDF of the normal dist
-# 
+#
 # Suppose we fix a cell line.
-# 
+#
 # Given a weight in the graph, $w_{ij}$, where $i$ is the source and $j$ is the target, we assign
 # $$w_{ij} \leftarrow w_{ij} * 2 * \frac{1}{\sqrt{2\pi}} \int_{-\infty}^x exp(\frac{1}{2} x^2)dx$$
 # This should be recognized as double the CDF of the normal distribution
@@ -66,38 +67,34 @@ gene_mappings.set_index('id', inplace=True)
 
 
 # In[200]:
+import time
 
 def integrate_expressions(G, cellline):
+    start = time.time()
+    print "Starting"
     output = G.copy()
+    print "Finished creating a copy after {0} seconds".format(time.time() - start)
     exprs = expressions[cellline]
     for node in output.nodes_iter():
         gene = gene_mappings.loc[int(node)]
         gene_expression = exprs.loc[gene][0]
-        
+
         # There are no Nan gene expressions
 #        if gene_expression == np.nan:
 #            continue  # Ignore the nan
-            
+
         # Now we adjust the weights of each of the neighbors by
         # multiplying it by the 2*CDF(expression)
         neighbors = output[node]
         for neighbor in neighbors:
             weight = output[node][neighbor]["weight"]
             output[node][neighbor]["weight"] = 2 * rv.cdf(gene_expression)
-    return output
+    nx.write_edgelist(output, "{0}_network.csv".format(cellline), delimiter=",")
+    print "Wrote to a file"
 
 
-# In[ ]:
-
-graph = integrate_expressions(G, "184B5")
-
-
-# In[190]:
-
-gene_mappings.loc[1]
-
-
-# In[ ]:
-
-
+from joblib import Parallel, delayed
+Parallel(n_jobs=-1, verbose=100)(delayed(integrate_expressions)(G, cellline)
+        for cellline in expressions.columns
+        )
 
